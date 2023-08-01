@@ -91,26 +91,8 @@ namespace LT_Nemesis
 
                     float distance = Agent.Main.Position.Distance(agent.Position);
                    
-
-                    //agent.MakeVoice(SkinVoiceManager.VoiceType.Focus, SkinVoiceManager.CombatVoiceNetworkPredictionType.NoPrediction);
-
-                    //SoundEvent soundEvent = SoundEvent.CreateEventFromExternalFile("event:/Extra/voiceover", "/Sounds/test/f1.wav", Mission.Current.Scene);
-                    //SoundEvent soundEvent = SoundEvent.CreateEventFromExternalFile("event:/Extra/voiceover", "/ModuleSounds/f1.wav", Mission.Current.Scene);
-
                     if (distance < 50f)
                     {
-
-                        //ScreenManager screenManager = ScreenManager.Instance;
-                        //MissionScreen missionScreen = MissionScreen.Current; // Get the current MissionScreen instance
-
-                        //LTLogger.IMRed(agent.Name + ": " + distance.ToString());
-
-                        //int soundIndex = SoundEvent.GetEventIdFromString("nms_f1");
-                        //SoundEvent soundEvent = SoundEvent.CreateEvent(soundIndex, Mission.Scene);
-                        //soundEvent.SetPosition(agent.Position);
-                        //soundEvent.Play();
-
-                        //if (NemesisMissionView.Instance != null) 
 
                         if (AgentCanSeeThePlayer(agent, distance)) 
                         {
@@ -161,7 +143,6 @@ namespace LT_Nemesis
 
             if (rayCastAgent == Agent.Main)
             {
-
                 if (debug) LTLogger.IMTAGreen("2 RayCast dst: " + num3.ToString() + " agent: " + rcAgentName);
                 return true;
             }

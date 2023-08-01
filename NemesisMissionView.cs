@@ -273,25 +273,39 @@ namespace LT_Nemesis
 
             int voiceNumber = 1;
 
-            // select voiceNumber based on the game's voice type
+            int voiceCountInCategory = 100;
+
+            // select voiceNumber/voice line count based on the game's voice type
             if (_agent.IsFemale) {
                 if (_persona == DefaultTraits.PersonaSoftspoken) voiceNumber = 2;
-                else if (_persona == DefaultTraits.PersonaCurt) voiceNumber = 1; //1
-                else if (_persona == DefaultTraits.PersonaEarnest) voiceNumber = 3;
+                else if (_persona == DefaultTraits.PersonaCurt) voiceNumber = 1;
+                else if (_persona == DefaultTraits.PersonaEarnest) { voiceNumber = 3; voiceCountInCategory = 63; }
                 else if (_persona == DefaultTraits.PersonaIronic) voiceNumber = 1;
             }
             else
             {
                 if (_persona == DefaultTraits.PersonaSoftspoken) voiceNumber = 2;
-                else if (_persona == DefaultTraits.PersonaCurt) voiceNumber = 1; // 1
+                else if (_persona == DefaultTraits.PersonaCurt) {voiceNumber = 1; voiceCountInCategory = 56; }
                 else if (_persona == DefaultTraits.PersonaEarnest) voiceNumber = 3;
-                else if (_persona == DefaultTraits.PersonaIronic) voiceNumber = 1;
+                else if (_persona == DefaultTraits.PersonaIronic) { voiceNumber = 4; voiceCountInCategory = 59; }
             }
 
-            int voiceCountInCategory = 56;
-            if (_agent.IsFemale) voiceCountInCategory = 63;
 
-            if (!_agent.IsFemale && voiceNumber == 3) voiceCountInCategory = 76; //m3
+            // debug
+            if (_debug)
+            {
+                if (_agent.IsFemale)
+                {
+                    voiceNumber = 1;
+                    voiceCountInCategory = 100;
+                }
+                else
+                {
+                    voiceNumber = 3;
+                    voiceCountInCategory = 100;
+                }
+            }
+
 
             string categoryName = "general";
             if (actionID == 1) categoryName = "general";    // for the future
