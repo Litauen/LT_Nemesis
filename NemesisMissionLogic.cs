@@ -14,14 +14,16 @@ namespace LT_Nemesis
 
         public static NemesisMissionLogic? Instance { get; set; }
 
-        private List<Agent> _nemesisAgents;
+        public List<Agent> MissionEnemyLordAgents;
+        public List<Agent> MissionCompanionAgents;
 
         public NemesisMissionLogic()
         {
 
             Instance = this;
 
-            this._nemesisAgents = new List<Agent>();
+            this.MissionEnemyLordAgents = new List<Agent>();
+            this.MissionCompanionAgents = new List<Agent>();
 
         }
 
@@ -30,12 +32,13 @@ namespace LT_Nemesis
             base.OnDeploymentFinished();
             //LTLogger.IMBlue("OnDeploymentFinished..");
             GetAllNemesis();
+            GetAllMissionCompanions();
         }
 
         // format list of Nemesis in the Mission
         public void GetAllNemesis()
         {
-            int total_heroes = 0;
+            int totalHeroes = 0;
 
             foreach (Agent agent in Mission.Current.PlayerEnemyTeam.ActiveAgents)
             {
@@ -43,7 +46,7 @@ namespace LT_Nemesis
                 if (agent.IsHuman && agent.Character != null && agent.Character.IsHero) //&& agent != Agent.Main
                 {
 
-                    total_heroes++;
+                    totalHeroes++;
 
                     // get hero out of agent
                     Hero? hero = (agent.Character as CharacterObject)?.HeroObject;
@@ -62,7 +65,7 @@ namespace LT_Nemesis
                     }
 
                     agent.AddComponent(new NemesisAgentComponent(agent, new RandomTimer(base.Mission.CurrentTime, rndStart, rndEnd)));
-                    _nemesisAgents.Add(agent);
+                    MissionEnemyLordAgents.Add(agent);
 
                 }
 
@@ -73,7 +76,7 @@ namespace LT_Nemesis
 
         public override void OnMissionTick(float dt)
         {
-            if (this._nemesisAgents.Count > 0)
+            if (this.MissionEnemyLordAgents.Count > 0)
             {
                 this.NemesisAction();
             }
@@ -82,7 +85,7 @@ namespace LT_Nemesis
         
         private void NemesisAction()
         {
-            foreach (Agent agent in _nemesisAgents)
+            foreach (Agent agent in MissionEnemyLordAgents)
             {
                 NemesisAgentComponent component = agent.GetComponent<NemesisAgentComponent>();
                 if (component == null) continue;
@@ -160,11 +163,64 @@ namespace LT_Nemesis
 
 
 
+        public void GetAllMissionCompanions()
+        {
+            int totalHeroes = 0;
+
+            foreach (Agent agent in Mission.Current.PlayerTeam.ActiveAgents)
+            {
+
+                if (agent.IsHuman && agent.Character != null && agent.Character.IsHero && agent != Agent.Main)
+                {
+
+                    totalHeroes++;
+
+                    //// get hero out of agent
+                    //Hero? hero = (agent.Character as CharacterObject)?.HeroObject;
+                    //if (hero == null) continue;
+
+                    MissionCompanionAgents.Add(agent);
+
+                }
+
+            }
+            if (_debug) LTLogger.IMBlue("Companions found: " + totalHeroes);
+        }
+
+
+
+
+        public override void OnAgentHit(Agent affectedAgent, Agent affectorAgent, in MissionWeapon attackerWeapon, in Blow blow, in AttackCollisionData attackCollisionData)
+        {
+
+            if (affectedAgent == Agent.Main)
+            {
+                int receivedDamage = blow.InflictedDamage;
+
+                WeaponComponentData attackerWeaponComponentData = attackerWeapon.CurrentUsageItem;
+
+                if (_debug) LTLogger.IMRed("Received damage: " + receivedDamage + " [" + attackerWeaponComponentData.WeaponClass.ToString() + "]");
+
+                //affectorAgent.MakeVoice(SkinVoiceManager.VoiceType.Yell, SkinVoiceManager.CombatVoiceNetworkPredictionType.NoPrediction);
+            }
+
+            if (Agent.Main != null && affectedAgent == Agent.Main.MountAgent)
+            {
+                int receivedDamage = blow.InflictedDamage;
+                if (_debug) LTLogger.IMRed("Horse received damage: " + receivedDamage);
+            }
+
+
+            base.OnAgentHit(affectedAgent, affectorAgent, attackerWeapon, blow, attackCollisionData);
+        }
+
+
 
         // cleanup
         public override void OnClearScene()
         {
-            this._nemesisAgents.Clear();
+            this.MissionEnemyLordAgents.Clear();
+            this.MissionCompanionAgents.Clear();
         }
 
         public override void OnAgentRemoved(Agent affectedAgent, Agent affectorAgent, AgentState agentState, KillingBlow killingBlow)
@@ -174,11 +230,19 @@ namespace LT_Nemesis
             {
                 affectedAgent.RemoveComponent(component);
             }
-            for (int i = 0; i < this._nemesisAgents.Count; i++)
+            for (int i = 0; i < this.MissionEnemyLordAgents.Count; i++)
             {
-                if (this._nemesisAgents[i] == affectedAgent)
+                if (this.MissionEnemyLordAgents[i] == affectedAgent)
                 {
-                    this._nemesisAgents.RemoveAt(i);
+                    this.MissionEnemyLordAgents.RemoveAt(i);
+                    return;
+                }
+            }
+            for (int i = 0; i < this.MissionCompanionAgents.Count; i++)
+            {
+                if (this.MissionCompanionAgents[i] == affectedAgent)
+                {
+                    this.MissionCompanionAgents.RemoveAt(i);
                     return;
                 }
             }

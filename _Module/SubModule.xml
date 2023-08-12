@@ -9,7 +9,7 @@
   <ModuleType value="Community" />
   <Url value="$moduleurl$" />
   <DependedModules>
-    <!--<DependedModule Id="Bannerlord.Harmony" DependentVersion="v2.2.2" />-->
+    <DependedModule Id="Bannerlord.Harmony" DependentVersion="v2.2.2" />
     <DependedModule Id="Native" />
     <DependedModule Id="SandBoxCore" />
     <DependedModule Id="Sandbox" />
@@ -19,7 +19,7 @@
   <!-- Community Dependency Metadata -->
   <!-- https://github.com/BUTR/Bannerlord.BLSE#for-modders -->
   <DependedModuleMetadatas>
-    <!--<DependedModuleMetadata id="Bannerlord.Harmony" order="LoadBeforeThis" version="v2.2.2" />-->
+    <DependedModuleMetadata id="Bannerlord.Harmony" order="LoadBeforeThis" version="v2.2.2" />
     <DependedModuleMetadata id="Native" order="LoadBeforeThis" />
     <DependedModuleMetadata id="SandBoxCore" order="LoadBeforeThis" />
     <DependedModuleMetadata id="Sandbox" order="LoadBeforeThis" />

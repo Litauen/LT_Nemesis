@@ -1,4 +1,5 @@
-﻿using LT.Helpers;
+﻿using HarmonyLib;
+using LT.Helpers;
 using LT.Logger;
 using TaleWorlds.MountAndBlade;
 
@@ -10,7 +11,10 @@ namespace LT_Nemesis
         protected override void OnSubModuleLoad()
         {
             base.OnSubModuleLoad();
-          
+
+            Harmony harmony = new Harmony("lt_nemesis");
+            harmony.PatchAll();
+
         }
 
         protected override void OnSubModuleUnloaded()
