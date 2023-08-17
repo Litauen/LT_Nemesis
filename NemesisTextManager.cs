@@ -139,6 +139,13 @@ namespace LT_Nemesis
 
             string voiceName = "!!!";
 
+            // remove Pitch modification
+            int indexOfP = key.IndexOf("-p");
+            if (indexOfP != -1)
+            {
+                key = key.Substring(0, indexOfP);
+            }
+
             if (_debug) voiceName = key;
 
             if (VoiceLines.ContainsKey(key))

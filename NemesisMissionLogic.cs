@@ -178,6 +178,7 @@ namespace LT_Nemesis
                     //// get hero out of agent
                     //Hero? hero = (agent.Character as CharacterObject)?.HeroObject;
                     //if (hero == null) continue;
+                    //if (hero!= null) { LTLogger.IMBlue("Name: " + hero.Name + "   StringID: " + hero.StringId);  }
 
                     MissionCompanionAgents.Add(agent);
 

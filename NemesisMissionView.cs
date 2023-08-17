@@ -234,13 +234,22 @@ namespace LT_Nemesis
 
             if (hero.CharacterObject != null) _persona = hero.CharacterObject.GetPersona();
 
-            if (_debug && _persona != null) LTLogger.IMTAGreen(hero.Name.ToString() + " " + _persona.Name.ToString() + " relation: " + relation.ToString());
+
+
+            if (_debug && _persona != null)
+            {
+                string heroID = hero.StringId;
+                LTLogger.IMTAGreen(hero.Name.ToString() + " " + _persona.Name.ToString() + " relation: " + relation.ToString() + " stringID: " + heroID);
+            }
 
 
             // TODO - read actual audio duration
             int voiceDuration = 5000;
 
-            string voiceName = GetVoiceName(actionID, ref voiceDuration);
+            string voiceName = GetVoiceName(actionID, ref voiceDuration, hero.StringId);
+
+            // pitch test
+            //agent?.AgentVisuals?.SetVoiceDefinitionIndex(0, (float)1.5);
 
             // play audio
             int soundIndex = SoundEvent.GetEventIdFromString(voiceName);
@@ -262,11 +271,11 @@ namespace LT_Nemesis
 
             _dataSource.VoiceLineText = NemesisTextManager.Instance.GetVoiceLineTextByVoiceName(voiceName);
 
-            if (_debug)
-            {
-                uint focusedContourColor = new TaleWorlds.Library.Color(1f, 0.84f, 0.35f, 1f).ToUnsignedInteger();
-                agent.AgentVisuals?.SetContourColor(focusedContourColor, true);
-            }
+            //if (_debug)
+            //{
+            //    uint focusedContourColor = new TaleWorlds.Library.Color(1f, 0.84f, 0.35f, 1f).ToUnsignedInteger();
+            //    agent.AgentVisuals?.SetContourColor(focusedContourColor, true);
+            //}
 
             // lord should look at the player when screeming, not sure if it works
             agent.AgentVisuals?.SetLookDirection(Agent.Main.GetEyeGlobalPosition());
@@ -283,7 +292,7 @@ namespace LT_Nemesis
             _dataSource.IsVisible = false;
             _dataSource.IsVisibleImage = false;
 
-            if (_debug) _agent?.AgentVisuals?.SetContourColor(null);
+            //if (_debug) _agent?.AgentVisuals?.SetContourColor(null);
 
             // we are not stopping playing sound here, letting it finish
 
@@ -293,7 +302,7 @@ namespace LT_Nemesis
         }
 
 
-        string GetVoiceName(int actionID, ref int duration)
+        string GetVoiceName(int actionID, ref int duration, string heroID)
         {
             string voiceName = "f1_test";
             if (_agent == null) return voiceName;
@@ -305,36 +314,40 @@ namespace LT_Nemesis
 
             int voiceCountInCategory = 100;
 
+            int pitchMod = GenerateHashNumber(heroID);
+
             // select voiceNumber/voice line count based on the game's voice type
             if (_agent.IsFemale) {
-                if (_persona == DefaultTraits.PersonaSoftspoken)   voiceNumber = 2;
+                if (_persona == DefaultTraits.PersonaSoftspoken)   voiceNumber = 4;
                 else if (_persona == DefaultTraits.PersonaCurt)    voiceNumber = 1;
-                else if (_persona == DefaultTraits.PersonaEarnest) voiceNumber = 3;
-                else if (_persona == DefaultTraits.PersonaIronic)  voiceNumber = 1;
+                else if (_persona == DefaultTraits.PersonaEarnest) voiceNumber = 2;
+                else if (_persona == DefaultTraits.PersonaIronic)  voiceNumber = 3;
             }
             else
             {
-                if (_persona == DefaultTraits.PersonaSoftspoken)    voiceNumber = 1;
-                else if (_persona == DefaultTraits.PersonaCurt)     voiceNumber = 1; // 1
+                if (_persona == DefaultTraits.PersonaSoftspoken)    voiceNumber = 2;
+                else if (_persona == DefaultTraits.PersonaCurt)     voiceNumber = 1;
                 else if (_persona == DefaultTraits.PersonaEarnest)  voiceNumber = 3;
                 else if (_persona == DefaultTraits.PersonaIronic)   voiceNumber = 4;
             }
 
 
             // debug
-            if (_debug)
-            {
-                if (_agent.IsFemale)
-                {
-                    voiceNumber = 4;
-                    voiceCountInCategory = 16;
-                }
-                else
-                {
-                    voiceNumber = 3;
-                    voiceCountInCategory = 100;
-                }
-            }
+            //if (_debug)
+            //{
+            //    if (_agent.IsFemale)
+            //    {
+            //        voiceNumber = 4;
+            //        voiceCountInCategory = 100;
+            //        pitchMod = 4;
+            //    }
+            //    else
+            //    {
+            //        voiceNumber = 4;
+            //        voiceCountInCategory = 100;
+            //        pitchMod = 4;
+            //    }
+            //}
 
 
             string categoryName = "general";
@@ -344,15 +357,28 @@ namespace LT_Nemesis
 
             voiceName = gender + voiceNumber.ToString() + "_" + categoryName + "_" + (rand.Next(voiceCountInCategory) + 1).ToString();
 
-            duration = 5000; // TODO rework
+            if (pitchMod > 0)
+            {
+                voiceName += "-p" + pitchMod.ToString();
+            }
 
-            if (_debug) LTLogger.IMBlue(voiceName);
+            duration = 5000; // ok for now, sound plays longer if > 5s
+
+            //pitchMod = GenerateHashNumber("lord_2_dsdfsdf");
+            if (_debug) LTLogger.IMBlue(voiceName + " pitchMod: " + pitchMod);
 
             return voiceName;
         }
 
 
 
+
+        static int GenerateHashNumber(string input)
+        {
+            int hash = Math.Abs(input.GetHashCode()); // Get the hash code of the input string
+            int range = 5; // Number of possible values (0, 1, 2, 3, 4)
+            return hash % range; // Map the hash code to the desired range
+        }
 
 
         string GetColorByRelation(int relation)
