@@ -12,10 +12,11 @@ using TaleWorlds.CampaignSystem;
 using System;
 using TaleWorlds.CampaignSystem.CharacterDevelopment;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
+using TaleWorlds.MountAndBlade.View;
 
 namespace LT_Nemesis
 {
-
+    [DefaultView]
     public class NemesisMissionView : MissionView
     {
 
@@ -37,37 +38,38 @@ namespace LT_Nemesis
         private bool _companionsHighlighted = false;
         private bool _enemyLordsHighlighted = false;
 
+        //bool gotMissionScreen = false;
+
         public NemesisMissionView()
         {
-
-            Instance = this;
-
+            Instance = this;    // useless here after 1.2.9
             this._dataSource = null;
-
+            if (_debug) LTLogger.IMGreen("NemesisMissionView INIT");
         }
 
-        public override void OnMissionScreenInitialize()
+
+        public override void OnBehaviorInitialize()
         {
 
-            base.OnMissionScreenInitialize();
+            base.OnBehaviorInitialize();
 
-            //LTLogger.IMRed(Mission.Mode.ToString());
-
-            // workaround to hide the icon on mission start
-            if (Mission != null && (Mission.Mode is MissionMode.Battle or MissionMode.Stealth or MissionMode.Deployment))
+            if (Mission != null && (Mission.Mode is MissionMode.Battle or MissionMode.Deployment or MissionMode.StartUp)) // or MissionMode.Stealth))
             {
                 DelayedScreenInit(100);
             }
-
-            //_dataSource.IsVisible = false;
-            //_dataSource.Refresh();
-            //LTLogger.IMRed("OnMissionScreenInitialize _dataSource.IsVisible = false");
         }
+
 
 
         private async void DelayedScreenInit(int duration)
         {
             await Task.Delay(duration);
+
+            if (base.MissionScreen == null)
+            {
+                LTLogger.IMRed("DelayedScreenInit: We DON'T have MissionScreen!");
+                return;
+            }
 
             CreateScreen();
 
@@ -77,47 +79,72 @@ namespace LT_Nemesis
 
         void CreateScreen()
         {
+            if (_debug) LTLogger.IMRed("CreateScreen");
+
             if (Mission == null) return;
 
             _dataSource = new NemesisMissionVM(Mission);
-            _layer = new GauntletLayer(1);
+            _layer = new GauntletLayer(100);
             _movie = _layer.LoadMovie("NemesisMissionHUD", _dataSource);
-            MissionScreen.AddLayer(_layer);
-
+            base.MissionScreen.AddLayer(_layer);
             _camera = base.MissionScreen.CombatCamera;
+
+            if (_debug) LTLogger.IMRed("CreateScreen DONE");
+
+            Instance = this;
+
         }
 
         public override void OnMissionScreenTick(float dt)
         {
+
+
             base.OnMissionScreenTick(dt);
 
-            if (_dataSource == null) return;
+            //if (!gotMissionScreen)
+            //{
+            //    if (base.MissionScreen == null)
+            //    {
+            //        LTLogger.IMGrey("OnMissionScreenTick: No MissionScreen...");
+            //        return;
+            //    }
+            //    else
+            //    {
+            //        LTLogger.IMRed("OnMissionScreenTick: We have MissionScreen!");
+            //        gotMissionScreen = true;
+            //    }
+            //}
+
             if (Agent.Main == null) return;
 
-            if (_debug)
-            {
-                if (Input.IsKeyPressed(TaleWorlds.InputSystem.InputKey.Q))
-                {
-                    RemoveScreen();
-                    CreateScreen();
-                    LTLogger.IMRed("Screen recreated.");
+            //if (_debug)
+            //{
+            //    if (Input.IsKeyPressed(TaleWorlds.InputSystem.InputKey.Q))
+            //    {
+            //        RemoveScreen();
+            //        CreateScreen();
+            //        LTLogger.IMBlue("Screen recreated.");
 
-                    NemesisTextManager.Instance.Initialize();
+            //        NemesisTextManager.Instance.Initialize();
+            //    }
+            //}
+
+            // only in the battle, no in the tournament
+            ////if (NemesisMissionLogic.Instance != null && NemesisMissionLogic.Instance.MissionMode == MissionMode.Battle)
+            if (Mission != null && (Mission.Mode == MissionMode.Battle))
+            {
+                // Companion highlighting
+                if (Input.IsKeyPressed(TaleWorlds.InputSystem.InputKey.LeftAlt))
+                {
+                    HighlightCompanions(true);
+                    HighlightEnemyLords(true);
+                }
+                if (Input.IsKeyReleased(TaleWorlds.InputSystem.InputKey.LeftAlt))
+                {
+                    HighlightCompanions(false);
+                    HighlightEnemyLords(false);
                 }
             }
-
-            // Companion highlighting
-            if (Input.IsKeyPressed(TaleWorlds.InputSystem.InputKey.LeftAlt))
-            {
-                HighlightCompanions(true);
-                HighlightEnemyLords(true);
-            }
-            if (Input.IsKeyReleased(TaleWorlds.InputSystem.InputKey.LeftAlt))
-            {
-                HighlightCompanions(false);
-                HighlightEnemyLords(false);
-            }
-
 
 
             if (_soundEvent != null) 
@@ -132,84 +159,99 @@ namespace LT_Nemesis
                     if (_soundEvent.IsPlaying()) _soundEvent.Stop();
 
                     // and hide the icon
-                    _dataSource.IsVisible = false;
-                    _dataSource.IsVisibleImage = false;
+                    if (_dataSource != null)
+                    {
+                        _dataSource.IsVisible = false;
+                        _dataSource.IsVisibleImage = false;
+                    }
                 }
 
-            } 
+            }
 
-            // update icon position
-            if (_camera != null && _agent != null)
-            {
-                // update agent icon coordinates
 
-                float a = 0f;
-                float b = 0f;
-                float num = 0f;
-
-                Vec3 position = _agent.Position;
-                position.z = _agent.GetEyeGlobalPosition().Z;
-
-                if (_agent.HasMount && _agent.MountAgent != null)
+            // only in the battle, no in the tournament
+            //if (NemesisMissionLogic.Instance != null && NemesisMissionLogic.Instance.MissionMode == MissionMode.Battle)
+            if (Mission != null && (Mission.Mode == MissionMode.Battle))
                 {
-                    //position.z += _agent.MountAgent.GetEyeGlobalPosition().Z;
-                    position.z += 0.8f;
-                } else
+
+                // update icon position
+                if (_dataSource != null && _camera != null && _agent != null)
                 {
-                    position.z += 0.6f;
-                }
 
-                MBWindowManager.WorldToScreen(this._camera, position, ref a, ref b, ref num);
+                    // update agent icon coordinates
 
-                // IsBehind = (num < 0f);
-                if (num > 0f)
-                {
-                    _dataSource.IsVisible = true;
+                    float a = 0f;
+                    float b = 0f;
+                    float num = 0f;
 
-                    float agentHeight = 0;
-                    float xOffset = 30;
+                    Vec3 position = _agent.Position;
+                    if (_agent.IsActive())
+                    {
+                        position.z = _agent.GetEyeGlobalPosition().Z;
 
-                    _dataSource.ScreenPositionX = a - xOffset;
-                    _dataSource.ScreenPositionY = b - agentHeight;
+                        if (_agent.HasMount && _agent.MountAgent != null)
+                        {
+                            //position.z += _agent.MountAgent.GetEyeGlobalPosition().Z;
+                            position.z += 0.8f;
+                        }
+                        else
+                        {
+                            position.z += 0.6f;
+                        }
+                    }
 
-                    // update alpha based on distance
-                    float distance = Agent.Main.Position.Distance(_agent.Position);
-                   
+                    MBWindowManager.WorldToScreen(this._camera, position, ref a, ref b, ref num);
 
-                    if (distance > 100f) distance = 100f;
-                    float alpha = (100f - distance) / 100f;
-                    _dataSource.AlphaFactor = alpha;
+                    // IsBehind = (num < 0f);
+                    if (num > 0f)
+                    {
+                        _dataSource.IsVisible = true;
 
-                    int iconSize;
+                        float agentHeight = 0;
+                        float xOffset = 30;
 
-                    // update font size based on distance
-                    if (distance < 10f) { _dataSource.FontSize = 20; iconSize = 25; }
-                    else if (distance < 15f) { _dataSource.FontSize = 19; iconSize = 24; }
-                    else if (distance < 20f) { _dataSource.FontSize = 18; iconSize = 23; }
-                    else if (distance < 25f) { _dataSource.FontSize = 17; iconSize = 22; }
-                    else if (distance < 30f) { _dataSource.FontSize = 16; iconSize = 21; }
-                    else if (distance < 35f) { _dataSource.FontSize = 15; iconSize = 20; }
-                    else if (distance < 40f) { _dataSource.FontSize = 14; iconSize = 19; }
-                    else if (distance < 50f) { _dataSource.FontSize = 13; iconSize = 18; }
-                    else if (distance < 60f) { _dataSource.FontSize = 12; iconSize = 17; }
-                    else if (distance < 70f) { _dataSource.FontSize = 11; iconSize = 16; }
-                    else if (distance < 80f) { _dataSource.FontSize = 10; iconSize = 15; }
-                    else if (distance < 90f) { _dataSource.FontSize = 9; iconSize = 14; }
-                    else if (distance < 100f) { _dataSource.FontSize = 8; iconSize = 13; }
-                    else { _dataSource.FontSize = 7; iconSize = 12; }
+                        _dataSource.ScreenPositionX = a - xOffset;
+                        _dataSource.ScreenPositionY = b - agentHeight;
+
+                        // update alpha based on distance
+                        float distance = Agent.Main.Position.Distance(_agent.Position);
 
 
-                    _dataSource.Width = (float)iconSize;
-                    _dataSource.Height = (float)iconSize;
-                  
+                        if (distance > 100f) distance = 100f;
+                        float alpha = (100f - distance) / 100f;
+                        _dataSource.AlphaFactor = alpha;
 
-                    //_dataSource.HeroName = _agent.Name.ToString(); // + " alpha: " + alpha + " distance: " + distance; // + ": " + a.ToString() + " " + b.ToString();
+                        int iconSize;
+
+                        // update font size based on distance
+                        if (distance < 10f) { _dataSource.FontSize = 20; iconSize = 25; }
+                        else if (distance < 15f) { _dataSource.FontSize = 19; iconSize = 24; }
+                        else if (distance < 20f) { _dataSource.FontSize = 18; iconSize = 23; }
+                        else if (distance < 25f) { _dataSource.FontSize = 17; iconSize = 22; }
+                        else if (distance < 30f) { _dataSource.FontSize = 16; iconSize = 21; }
+                        else if (distance < 35f) { _dataSource.FontSize = 15; iconSize = 20; }
+                        else if (distance < 40f) { _dataSource.FontSize = 14; iconSize = 19; }
+                        else if (distance < 50f) { _dataSource.FontSize = 13; iconSize = 18; }
+                        else if (distance < 60f) { _dataSource.FontSize = 12; iconSize = 17; }
+                        else if (distance < 70f) { _dataSource.FontSize = 11; iconSize = 16; }
+                        else if (distance < 80f) { _dataSource.FontSize = 10; iconSize = 15; }
+                        else if (distance < 90f) { _dataSource.FontSize = 9; iconSize = 14; }
+                        else if (distance < 100f) { _dataSource.FontSize = 8; iconSize = 13; }
+                        else { _dataSource.FontSize = 7; iconSize = 12; }
 
 
-                }
-                else
-                {
-                    _dataSource.IsVisible = false;
+                        _dataSource.Width = (float)iconSize;
+                        _dataSource.Height = (float)iconSize;
+
+
+                        //_dataSource.HeroName = _agent.Name.ToString(); // + " alpha: " + alpha + " distance: " + distance; // + ": " + a.ToString() + " " + b.ToString();
+
+
+                    }
+                    else
+                    {
+                        _dataSource.IsVisible = false;
+                    }
                 }
 
             }
@@ -218,38 +260,49 @@ namespace LT_Nemesis
 
 
 
-        public void ActivateNemesis(Agent agent, int actionID = 1) // actionID - what kind of audio to play - not implemented yet
+        public void ActivateNemesis(Agent agent, int actionID = 1)
         {
-            if (_dataSource == null || Hero.MainHero == null) return;
+
+            if (_debug) LTLogger.IMBlue("ActivateNemesis");
+
+            if (Hero.MainHero == null) return;
+
+            if (_debug && _agent != null) LTLogger.IMBlue("agent != null");
+
             if (_agent != null || _soundEvent != null) return;     // we already have agent in process
 
-            _agent = agent;
-
-            // get hero out of agent
+            // get hero data out of agent
             Hero? hero = (agent.Character as CharacterObject)?.HeroObject;
-            if (hero == null) return;
+            if (hero == null)
+            {
+                if (_debug) LTLogger.IMBlue("ActivateNemesis - no hero!");
+                return;
+            }
+            
             _hero = hero;
+            _agent = agent;     // mark that this agent will shout now
 
-            int relation = CharacterRelationManager.GetHeroRelation(Hero.MainHero, hero);
+
+
+            if (_debug) LTLogger.IMBlue("ActivateNemesis - we have hero");
 
             if (hero.CharacterObject != null) _persona = hero.CharacterObject.GetPersona();
 
-
+            int relation = CharacterRelationManager.GetHeroRelation(Hero.MainHero, hero);
 
             if (_debug && _persona != null)
             {
                 string heroID = hero.StringId;
-                LTLogger.IMTAGreen(hero.Name.ToString() + " " + _persona.Name.ToString() + " relation: " + relation.ToString() + " stringID: " + heroID);
+                LTLogger.IMBlue(hero.Name.ToString() + " " + _persona.Name.ToString() + " relation: " + relation.ToString() + " stringID: " + heroID);
             }
 
 
+
+            // shout audio
             // TODO - read actual audio duration
-            int voiceDuration = 5000;
+            int voiceDuration = 8000;
 
-            string voiceName = GetVoiceName(actionID, ref voiceDuration, hero.StringId);
-
-            // pitch test
-            //agent?.AgentVisuals?.SetVoiceDefinitionIndex(0, (float)1.5);
+            string voiceName = NemesisHelpers.GetVoiceName(agent, hero, _persona, actionID, ref voiceDuration, hero.StringId, _debug);
 
             // play audio
             int soundIndex = SoundEvent.GetEventIdFromString(voiceName);
@@ -257,25 +310,36 @@ namespace LT_Nemesis
             _soundEvent.SetPosition(agent.Position);
             _soundEvent.Play();
 
-            //relation = 100;
+            if (_dataSource == null) LTLogger.IMRed("_dataSource == null");
 
-            _dataSource.Color = GetColorByRelation(relation);
 
-            _dataSource.HeroName = _hero.Name.ToString();
+            //LTLogger.IMRed(Mission.Mode.ToString());
 
-            //_dataSource.HeroName = "Veeeeryyyyyyyyy loooong name of a lord";
+            // visuals (name/face/text)
+            // only in the battle, not in the tournament, not anymore, MissionMode in 1.2.x for tournament became 'Battle'
+            if (Mission != null && (Mission.Mode == MissionMode.Battle) && _dataSource != null)
+            //if (NemesisMissionLogic.Instance != null && NemesisMissionLogic.Instance.MissionMode == MissionMode.Battle && _dataSource != null)
+            {
 
-            _dataSource.IsVisibleImage = true;
-            if (_hero.CharacterObject != null) _dataSource.ImageIdentifier = new ImageIdentifierVM(new ImageIdentifier(CampaignUIHelper.GetCharacterCode(_hero.CharacterObject)));
-            if (_hero.Clan != null && _hero.Clan.Banner != null) _dataSource.Banner = new ImageIdentifierVM(BannerCode.CreateFrom(_hero.Clan.Banner), true);
+                _dataSource.Color = NemesisHelpers.GetColorByRelation(relation);
+                _dataSource.HeroName = _hero.Name.ToString();
 
-            _dataSource.VoiceLineText = NemesisTextManager.Instance.GetVoiceLineTextByVoiceName(voiceName);
+                //_dataSource.HeroName = "Veeeeryyyyyyyyy loooong name of a lord";
 
-            //if (_debug)
-            //{
-            //    uint focusedContourColor = new TaleWorlds.Library.Color(1f, 0.84f, 0.35f, 1f).ToUnsignedInteger();
-            //    agent.AgentVisuals?.SetContourColor(focusedContourColor, true);
-            //}
+                // show lord face+text only for general shouts
+                if (actionID == 1)
+                {
+                    _dataSource.IsVisibleImage = true;
+                    if (_hero.CharacterObject != null) _dataSource.ImageIdentifier = new ImageIdentifierVM(new ImageIdentifier(CampaignUIHelper.GetCharacterCode(_hero.CharacterObject)));
+                    if (_hero.Clan != null && _hero.Clan.Banner != null) _dataSource.Banner = new ImageIdentifierVM(BannerCode.CreateFrom(_hero.Clan.Banner), true);
+
+                    _dataSource.VoiceLineText = NemesisTextManager.Instance.GetVoiceLineTextByVoiceName(voiceName);
+                }
+                else
+                {
+                    _dataSource.IsVisibleImage = false;
+                }
+            }
 
             // lord should look at the player when screeming, not sure if it works
             agent.AgentVisuals?.SetLookDirection(Agent.Main.GetEyeGlobalPosition());
@@ -286,11 +350,15 @@ namespace LT_Nemesis
 
         private async void DelayedNemesisActionDeactivation(int duration)
         {
+            if (_debug) LTLogger.IMBlue("DelayedNemesisActionDeactivation: " + duration.ToString());
+
             await Task.Delay(duration);
-            if (_dataSource == null) return;
-            
-            _dataSource.IsVisible = false;
-            _dataSource.IsVisibleImage = false;
+
+            if (_dataSource != null)
+            {
+                _dataSource.IsVisible = false;
+                _dataSource.IsVisibleImage = false;
+            }
 
             //if (_debug) _agent?.AgentVisuals?.SetContourColor(null);
 
@@ -299,106 +367,13 @@ namespace LT_Nemesis
             _agent = null;
             _soundEvent = null;
 
+            if (_debug) LTLogger.IMBlue("DelayedNemesisActionDeactivation: _agent = null");
+
         }
 
 
-        string GetVoiceName(int actionID, ref int duration, string heroID)
-        {
-            string voiceName = "f1_test";
-            if (_agent == null) return voiceName;
+ 
 
-            string gender;
-            if (_agent.IsFemale) gender = "f"; else gender = "m";
-
-            int voiceNumber = 1;
-
-            int voiceCountInCategory = 100;
-
-            int pitchMod = GenerateHashNumber(heroID);
-
-            // select voiceNumber/voice line count based on the game's voice type
-            if (_agent.IsFemale) {
-                if (_persona == DefaultTraits.PersonaSoftspoken)   voiceNumber = 4;
-                else if (_persona == DefaultTraits.PersonaCurt)    voiceNumber = 1;
-                else if (_persona == DefaultTraits.PersonaEarnest) voiceNumber = 2;
-                else if (_persona == DefaultTraits.PersonaIronic)  voiceNumber = 3;
-            }
-            else
-            {
-                if (_persona == DefaultTraits.PersonaSoftspoken)    voiceNumber = 2;
-                else if (_persona == DefaultTraits.PersonaCurt)     voiceNumber = 1;
-                else if (_persona == DefaultTraits.PersonaEarnest)  voiceNumber = 3;
-                else if (_persona == DefaultTraits.PersonaIronic)   voiceNumber = 4;
-            }
-
-
-            // debug
-            //if (_debug)
-            //{
-            //    if (_agent.IsFemale)
-            //    {
-            //        voiceNumber = 4;
-            //        voiceCountInCategory = 100;
-            //        pitchMod = 4;
-            //    }
-            //    else
-            //    {
-            //        voiceNumber = 4;
-            //        voiceCountInCategory = 100;
-            //        pitchMod = 4;
-            //    }
-            //}
-
-
-            string categoryName = "general";
-            if (actionID == 1) categoryName = "general";    // for the future
-
-            Random rand = new Random();
-
-            voiceName = gender + voiceNumber.ToString() + "_" + categoryName + "_" + (rand.Next(voiceCountInCategory) + 1).ToString();
-
-            if (pitchMod > 0)
-            {
-                voiceName += "-p" + pitchMod.ToString();
-            }
-
-            duration = 5000; // ok for now, sound plays longer if > 5s
-
-            //pitchMod = GenerateHashNumber("lord_2_dsdfsdf");
-            if (_debug) LTLogger.IMBlue(voiceName + " pitchMod: " + pitchMod);
-
-            return voiceName;
-        }
-
-
-
-
-        static int GenerateHashNumber(string input)
-        {
-            int hash = Math.Abs(input.GetHashCode()); // Get the hash code of the input string
-            int range = 5; // Number of possible values (0, 1, 2, 3, 4)
-            return hash % range; // Map the hash code to the desired range
-        }
-
-
-        string GetColorByRelation(int relation)
-        {
-            string color = "#FFFFFFFF";
-
-            if (relation < -80) color = "#C93421FF";
-            else if (relation < -60) color = "#D47052FF";
-            else if (relation < -40) color = "#E3A38BFF";
-            else if (relation < -20) color = "#F3D2C2FF";
-            else if (relation < 0) color = "#F9F0EBFF";
-            else if (relation == 0) color = "#FFFFFFFF";
-            else if (relation < 20) color = "#EDF4ECFF";
-            else if (relation < 40) color = "#BED9BBFF";
-            else if (relation < 60) color = "#93C090FF";
-            else if (relation < 80) color = "#72B074FF";
-            else if (relation <= 100) color = "#419550FF";
-
-            return color;
-        }
 
 
 
@@ -460,8 +435,21 @@ namespace LT_Nemesis
 
         public override void OnAgentRemoved(Agent affectedAgent, Agent affectorAgent, AgentState agentState, KillingBlow blow)
         {
+            if (Mission != null && (Mission.Mode == MissionMode.Battle))
+            {
+                affectedAgent?.AgentVisuals?.SetContourColor(null);
+            }
 
-            affectedAgent?.AgentVisuals?.SetContourColor(null);
+            //if (affectedAgent == _agent)
+            //{
+            //    LTLogger.IMRed("OnAgentRemoved");
+
+            //    if (_dataSource != null)
+            //    {
+            //        _dataSource.IsVisible = false;
+            //        _dataSource.IsVisibleImage = false;
+            //    }
+            //}
 
             base.OnAgentRemoved(affectedAgent, affectorAgent, agentState, blow);
         }
@@ -478,6 +466,9 @@ namespace LT_Nemesis
         {
             base.OnMissionScreenFinalize();
             RemoveScreen();
+
+            _hero = null;
+            _agent = null;
         }
 
         void RemoveScreen()
@@ -487,12 +478,6 @@ namespace LT_Nemesis
             _layer = null;
             _dataSource = null;
         }
-
-
-
-
-
-
 
     }
 }

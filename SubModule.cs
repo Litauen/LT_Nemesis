@@ -36,10 +36,9 @@ namespace LT_Nemesis
             if (mission == null) return;
             base.OnMissionBehaviorInitialize(mission);
 
-            mission.AddMissionBehavior(new NemesisMissionLogic());
             mission.AddMissionBehavior(new NemesisMissionView());
-
-            
+            mission.AddMissionBehavior(new NemesisMissionLogic());
+    
 
         }
 

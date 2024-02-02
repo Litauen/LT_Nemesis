@@ -1,6 +1,7 @@
 ﻿using TaleWorlds.Core;
 using TaleWorlds.MountAndBlade;
 using TaleWorlds.Library;
+using LT.Logger;
 
 namespace LT_Nemesis
 {
@@ -95,10 +96,13 @@ namespace LT_Nemesis
 
         public void OnMissionModeChanged(Mission mission)
         {
-            if (mission == null) return;
-            IsVisible = (mission.Mode is MissionMode.Battle or MissionMode.Stealth);
+            //if (mission == null) return;
+            //IsVisible = (mission.Mode is MissionMode.Battle or MissionMode.Stealth);
 
-            IsVisibleImage = IsVisible;
+            //IsVisibleImage = IsVisible;
+
+            //LTLogger.IMRed("OnMissionModeChanged: " + mission.Mode.ToString());
+            //LTLogger.IMRed("   IsVisible: " + _isVisible.ToString());
 
             //IsHidden = !IsVisible;
         }
