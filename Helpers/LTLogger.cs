@@ -1,5 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Net.NetworkInformation;
+using TaleWorlds.CampaignSystem;
+using TaleWorlds.CampaignSystem.Map;
+using TaleWorlds.CampaignSystem.Party;
 using TaleWorlds.Core;
 using TaleWorlds.Library;
 using TaleWorlds.Localization;
@@ -8,7 +13,7 @@ namespace LT.Logger
 {
     public static class LTLogger
     {
-   
+
         public const string ModuleId = "LT_Nemesis";
         private static readonly string LOG_PATH = @"..\\..\\Modules\\" + ModuleId + "\\logs\\";
         private static readonly string ERROR_FILE = LOG_PATH + "error.log";
@@ -25,24 +30,76 @@ namespace LT.Logger
 
         static LTLogger()
         {
-            if (!Directory.Exists(LOG_PATH)) Directory.CreateDirectory(LOG_PATH);
-            if (!File.Exists(ERROR_FILE)) File.Create(ERROR_FILE);
-            if (!File.Exists(DEBUG_FILE)) File.Create(DEBUG_FILE);
+            try
+            {
+                if (!Directory.Exists(LOG_PATH)) Directory.CreateDirectory(LOG_PATH);
+                if (!File.Exists(ERROR_FILE)) File.Create(ERROR_FILE);
+                if (!File.Exists(DEBUG_FILE)) File.Create(DEBUG_FILE);
+            }
+            catch (Exception)
+            {
+                // If we can't create log files, just continue without logging
+            }
         }
 
         public static void LogDebug(string log)
         {
-            //if (!Main.Settings.DebugMode) return;
-            using (StreamWriter streamWriter = new(DEBUG_FILE, true))
-                streamWriter.WriteLine(log);
-
+            try
+            {
+                //if (!Main.Settings.DebugMode) return;
+                using (StreamWriter streamWriter = new(DEBUG_FILE, true))
+                    streamWriter.WriteLine(log);
+            }
+            catch (IOException)
+            {
+                // File is locked or inaccessible, just silently continue
+                // Optionally, you could display a non-intrusive message:
+                // InformationManager.DisplayMessage(new InformationMessage("Unable to write to log file"));
+            }
+            catch (Exception)
+            {
+                // Catch any other exceptions to prevent crashes
+            }
             DisplayInfoMsg("DEBUG | " + log);
         }
 
-        public static void LogError(string log)
+        public static void Debug(string log)
         {
-            using StreamWriter streamWriter = new(ERROR_FILE, true);
-            streamWriter.WriteLine(log);
+            try
+            {
+                using (StreamWriter streamWriter = new(DEBUG_FILE, true))
+                    streamWriter.WriteLine(log);
+            }
+            catch (IOException)
+            {
+                // File is locked or inaccessible, just silently continue
+                // Optionally, you could display a non-intrusive message:
+                // InformationManager.DisplayMessage(new InformationMessage("Unable to write to log file"));
+            }
+            catch (Exception)
+            {
+                // Catch any other exceptions to prevent crashes
+            }
+        }
+
+        public static void LogError(string log, bool msgToScreen = false)
+        {
+            try
+            {
+                using StreamWriter streamWriter = new(ERROR_FILE, true);
+                streamWriter.WriteLine(log);
+            }
+            catch (IOException)
+            {
+                // File is locked or inaccessible, just silently continue
+                // Optionally, you could display a non-intrusive message:
+                // InformationManager.DisplayMessage(new InformationMessage("Unable to write to log file"));
+            }
+            catch (Exception)
+            {
+                // Catch any other exceptions to prevent crashes
+            }
+            if (msgToScreen) LTLogger.IMRed(log);
         }
 
         public static void LogError(Exception exception)
@@ -87,7 +144,7 @@ namespace LT.Logger
         {
             IM(message, "#ED4337FF");
         }
-      
+
 
         public static void IMRed(string message)
         {
@@ -103,6 +160,17 @@ namespace LT.Logger
         {
             IM(message, "#AAAAAAFF");
         }
+
+        public static void IMYellow(string message)
+        {
+            IM(message, "#FCFA4EFF");
+        }
+
+        public static void IMGold(string message)
+        {
+            IM(message, "#C5B358FF");
+        }
+
         private static void DisplayColorInfoMessage(string message, Color messageColor, bool logToFile = false)
         {
             string fullMessage = message;
@@ -125,8 +193,11 @@ namespace LT.Logger
         // yellow notification at the top-center, like relation change
         internal static void AddQuickNotificationWithSound(TextObject content, BasicCharacterObject? announcer = null, string? sounEventPath = null)
         {
-            MBInformationManager.AddQuickInformation(content, 0, announcer, sounEventPath);
+            MBInformationManager.AddQuickInformation(content, 0, announcer, null, sounEventPath);
         }
+
+
+
 
     }
 }

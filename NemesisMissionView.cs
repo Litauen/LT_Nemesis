@@ -1,18 +1,20 @@
-﻿using System.Threading.Tasks;
-using TaleWorlds.Core;
-using TaleWorlds.Engine.GauntletUI;
-using TaleWorlds.GauntletUI.Data;
-using TaleWorlds.MountAndBlade.View.MissionViews;
-using TaleWorlds.MountAndBlade.View.Screens;
-using TaleWorlds.MountAndBlade;
-using TaleWorlds.Engine;
-using LT.Logger;
-using TaleWorlds.Library;
-using TaleWorlds.CampaignSystem;
+﻿using LT.Logger;
 using System;
+using System.Threading.Tasks;
+using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.CharacterDevelopment;
 using TaleWorlds.CampaignSystem.ViewModelCollection;
+using TaleWorlds.Core;
+using TaleWorlds.Core.ImageIdentifiers;
+using TaleWorlds.Core.ViewModelCollection.ImageIdentifiers;
+using TaleWorlds.Engine;
+using TaleWorlds.Engine.GauntletUI;
+using TaleWorlds.GauntletUI.Data;
+using TaleWorlds.Library;
+using TaleWorlds.MountAndBlade;
 using TaleWorlds.MountAndBlade.View;
+using TaleWorlds.MountAndBlade.View.MissionViews;
+using TaleWorlds.MountAndBlade.View.Screens;
 
 namespace LT_Nemesis
 {
@@ -26,6 +28,7 @@ namespace LT_Nemesis
 
         GauntletLayer? _layer;
         IGauntletMovie? _movie;
+        private static GauntletMovieIdentifier _gauntletMovieIdentifier;
         NemesisMissionVM? _dataSource;
 
         Camera? _camera;
@@ -44,7 +47,7 @@ namespace LT_Nemesis
         {
             Instance = this;    // useless here after 1.2.9
             this._dataSource = null;
-            if (_debug) LTLogger.IMGreen("NemesisMissionView INIT");
+            if (_debug) LTLogger.Debug("NemesisMissionView INIT");
         }
 
 
@@ -67,7 +70,7 @@ namespace LT_Nemesis
 
             if (base.MissionScreen == null)
             {
-                LTLogger.IMRed("DelayedScreenInit: We DON'T have MissionScreen!");
+                LTLogger.Debug("DelayedScreenInit: We DON'T have MissionScreen!");
                 return;
             }
 
@@ -79,17 +82,18 @@ namespace LT_Nemesis
 
         void CreateScreen()
         {
-            if (_debug) LTLogger.IMRed("CreateScreen");
+            if (_debug) LTLogger.Debug("CreateScreen");
 
             if (Mission == null) return;
 
             _dataSource = new NemesisMissionVM(Mission);
-            _layer = new GauntletLayer(100);
-            _movie = _layer.LoadMovie("NemesisMissionHUD", _dataSource);
+            _layer = new GauntletLayer("Nemesis", 100, false);
+            //_movie = _layer.LoadMovie("NemesisMissionHUD", _dataSource); // 1.2.12
+            _gauntletMovieIdentifier = _layer.LoadMovie("NemesisMissionHUD", _dataSource);
             base.MissionScreen.AddLayer(_layer);
             _camera = base.MissionScreen.CombatCamera;
 
-            if (_debug) LTLogger.IMRed("CreateScreen DONE");
+            if (_debug) LTLogger.Debug("CreateScreen DONE");
 
             Instance = this;
 
@@ -263,11 +267,11 @@ namespace LT_Nemesis
         public void ActivateNemesis(Agent agent, int actionID = 1)
         {
 
-            if (_debug) LTLogger.IMBlue("ActivateNemesis");
+            if (_debug) LTLogger.Debug("ActivateNemesis");
 
             if (Hero.MainHero == null) return;
 
-            if (_debug && _agent != null) LTLogger.IMBlue("agent != null");
+            if (_debug && _agent != null) LTLogger.Debug("agent != null");
 
             if (_agent != null || _soundEvent != null) return;     // we already have agent in process
 
@@ -275,7 +279,7 @@ namespace LT_Nemesis
             Hero? hero = (agent.Character as CharacterObject)?.HeroObject;
             if (hero == null)
             {
-                if (_debug) LTLogger.IMBlue("ActivateNemesis - no hero!");
+                if (_debug) LTLogger.Debug("ActivateNemesis - no hero!");
                 return;
             }
             
@@ -284,7 +288,7 @@ namespace LT_Nemesis
 
 
 
-            if (_debug) LTLogger.IMBlue("ActivateNemesis - we have hero");
+            if (_debug) LTLogger.Debug("ActivateNemesis - we have hero");
 
             if (hero.CharacterObject != null) _persona = hero.CharacterObject.GetPersona();
 
@@ -293,7 +297,7 @@ namespace LT_Nemesis
             if (_debug && _persona != null)
             {
                 string heroID = hero.StringId;
-                LTLogger.IMBlue(hero.Name.ToString() + " " + _persona.Name.ToString() + " relation: " + relation.ToString() + " stringID: " + heroID);
+                LTLogger.Debug(hero.Name.ToString() + " " + _persona.Name.ToString() + " relation: " + relation.ToString() + " stringID: " + heroID);
             }
 
 
@@ -310,7 +314,7 @@ namespace LT_Nemesis
             _soundEvent.SetPosition(agent.Position);
             _soundEvent.Play();
 
-            if (_dataSource == null) LTLogger.IMRed("_dataSource == null");
+            if (_dataSource == null) LTLogger.Debug("_dataSource == null");
 
 
             //LTLogger.IMRed(Mission.Mode.ToString());
@@ -330,8 +334,13 @@ namespace LT_Nemesis
                 if (actionID == 1)
                 {
                     _dataSource.IsVisibleImage = true;
-                    if (_hero.CharacterObject != null) _dataSource.ImageIdentifier = new ImageIdentifierVM(new ImageIdentifier(CampaignUIHelper.GetCharacterCode(_hero.CharacterObject)));
-                    if (_hero.Clan != null && _hero.Clan.Banner != null) _dataSource.Banner = new ImageIdentifierVM(BannerCode.CreateFrom(_hero.Clan.Banner), true);
+                    //if (_hero.CharacterObject != null) _dataSource.ImageIdentifier = new ImageIdentifierVM(new ImageIdentifier(CampaignUIHelper.GetCharacterCode(_hero.CharacterObject)));
+                    //if (_hero.CharacterObject != null) _dataSource.ImageIdentifier = new CharacterImageIdentifier(CampaignUIHelper.GetCharacterCode(_hero.CharacterObject)); // no image
+
+                    //if (_hero.CharacterObject != null) _dataSource.ImageIdentifier = new CharacterImageIdentifierVM(CampaignUIHelper.GetCharacterCode(_hero.CharacterObject));
+                    if (_hero.CharacterObject != null) _dataSource.ImageIdentifier = new CharacterImageIdentifierVM(CharacterCode.CreateFrom(_hero.CharacterObject));
+
+                    //if (_hero.Clan != null && _hero.Clan.Banner != null) _dataSource.Banner = new ImageIdentifierVM(BannerCode.CreateFrom(_hero.Clan.Banner), true);
 
                     _dataSource.VoiceLineText = NemesisTextManager.Instance.GetVoiceLineTextByVoiceName(voiceName);
                 }
@@ -350,7 +359,7 @@ namespace LT_Nemesis
 
         private async void DelayedNemesisActionDeactivation(int duration)
         {
-            if (_debug) LTLogger.IMBlue("DelayedNemesisActionDeactivation: " + duration.ToString());
+            if (_debug) LTLogger.Debug("DelayedNemesisActionDeactivation: " + duration.ToString());
 
             await Task.Delay(duration);
 
@@ -367,7 +376,7 @@ namespace LT_Nemesis
             _agent = null;
             _soundEvent = null;
 
-            if (_debug) LTLogger.IMBlue("DelayedNemesisActionDeactivation: _agent = null");
+            if (_debug) LTLogger.Debug("DelayedNemesisActionDeactivation: _agent = null");
 
         }
 

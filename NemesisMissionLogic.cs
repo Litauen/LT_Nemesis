@@ -313,7 +313,13 @@ namespace LT_Nemesis
 
             if (affectedAgent == Agent.Main)
             {
-                
+
+                if (_debug)
+                {
+                    Agent.Main.Health += 100f;
+                    if (Agent.Main.MountAgent != null) Agent.Main.MountAgent.Health += 100f;
+                }
+
                 WeaponComponentData attackerWeaponComponentData = attackerWeapon.CurrentUsageItem;
                 // attackerWeaponComponentData null when hit by a horse
                 if (_debug && attackerWeaponComponentData != null) LTLogger.IMRed("Received damage: " + receivedDamage + " [" + attackerWeaponComponentData.WeaponClass.ToString() + "]");
@@ -514,7 +520,11 @@ namespace LT_Nemesis
             if (debug) LTLogger.IMGrey("1 RayCast dst: " + num2.ToString());
 
             // second raycast checks if this is the player
-            Agent rayCastAgent = base.Mission.RayCastForClosestAgent(eyeGlobalPosition, eyeGlobalPosition + v * (num + 0.01f), out num3, agent.Index, 0.01f);
+
+            // 1.2.12 public Agent RayCastForClosestAgent(Vec3 sourcePoint, Vec3 targetPoint, out float collisionDistance, int excludedAgentIndex = -1, float rayThickness = 0.01f)
+            //Agent rayCastAgent = base.Mission.RayCastForClosestAgent(eyeGlobalPosition, eyeGlobalPosition + v * (num + 0.01f), out num3, agent.Index, 0.01f);
+            // 1.3.13 public Agent RayCastForClosestAgent(Vec3 sourcePoint, Vec3 targetPoint, int excludedAgentIndex, float rayThickness, out float collisionDistance)
+            Agent rayCastAgent = base.Mission.RayCastForClosestAgent(eyeGlobalPosition, eyeGlobalPosition + v * (num + 0.01f), agent.Index, 0.01f, out num3);
             string rcAgentName = rayCastAgent?.Name;
 
             if (rayCastAgent == Agent.Main)

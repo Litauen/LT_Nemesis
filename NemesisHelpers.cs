@@ -73,12 +73,12 @@ namespace LT_Nemesis
                 else if (persona == DefaultTraits.PersonaIronic) voiceNumber = 3;
 
                 
-                if (hero.Culture.StringId == "sturgia")
+                if (hero.Culture.StringId == "sturgia" || hero.Culture.StringId == "rus")
                 {
                     // voice with slavic accent for sturgian females
                     voiceNumber = 2;
                 } 
-                else if (hero.Culture.StringId == "vlandia")
+                else if (hero.Culture.StringId == "vlandia" || hero.Culture.StringId == "danish")
                 {
                     // voice with french accent for vlandian females
                     voiceNumber = 5;
@@ -94,11 +94,11 @@ namespace LT_Nemesis
                 else if (persona == DefaultTraits.PersonaIronic) voiceNumber = 4;
 
                 // voice with scottish accent for battanian males
-                if (hero.Culture.StringId == "battania")
+                if (hero.Culture.StringId == "battania" || hero.Culture.StringId == "danish")
                 {
                     voiceNumber = 3;
                 }
-                else if (hero.Culture.StringId == "vlandia")
+                else if (hero.Culture.StringId == "vlandia" || hero.Culture.StringId == "crusader")
                 {
                     // voice with french accent for vlandian males
                     voiceNumber = 5;

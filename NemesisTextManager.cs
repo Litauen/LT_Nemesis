@@ -67,13 +67,13 @@ namespace LT_Nemesis
                     continue; // voiceNumber not found
                 }
 
-                if (_debug) LTLogger.IMGrey(folderName + " gender: " + gender);
+                if (_debug) LTLogger.Debug(folderName + " gender: " + gender);
 
                 string[] subSubFolders = Directory.GetDirectories(subFolder);
                 foreach (string subSubFolder in subSubFolders)
                 {
                     string subSubFolderName = Path.GetFileName(subSubFolder);
-                    if (_debug) LTLogger.IMGrey("  " + subSubFolderName);
+                    if (_debug) LTLogger.Debug("  " + subSubFolderName);
 
                     bool voiceLineTXTOK = false;
                     string voiceLineTXTFile = System.IO.Path.Combine(subSubFolder, "VoiceLines.txt");
@@ -92,20 +92,20 @@ namespace LT_Nemesis
                         }
                         catch (UnauthorizedAccessException)
                         {
-                            LTLogger.IMRed("LT_Nemesis ERROR: " + folderName + "\\" + subSubFolderName + "\\VoiceLines.txt is not readable due to lack of permissions");
+                            LTLogger.Debug("LT_Nemesis ERROR: " + folderName + "\\" + subSubFolderName + "\\VoiceLines.txt is not readable due to lack of permissions");
                         }
                         catch (IOException)
                         {
-                            LTLogger.IMRed("LT_Nemesis ERROR: " + folderName + "\\" + subSubFolderName + "\\VoiceLines.txt is not readable due to other IO errors");
+                            LTLogger.Debug("LT_Nemesis ERROR: " + folderName + "\\" + subSubFolderName + "\\VoiceLines.txt is not readable due to other IO errors");
                         }
                     } else
                     {
-                        LTLogger.IMRed("LT_Nemesis ERROR: " + folderName + "\\" + subSubFolderName + "\\VoiceLines.txt NOT PRESENT");
+                        LTLogger.Debug("LT_Nemesis ERROR: " + folderName + "\\" + subSubFolderName + "\\VoiceLines.txt NOT PRESENT");
                     }
 
                     if (voiceLineTXTOK)
                     {
-                        if (_debug) LTLogger.IMTAGreen("    VoiceLines.txt PRESENT and Readable");
+                        if (_debug) LTLogger.Debug("    VoiceLines.txt PRESENT and Readable");
 
                         // finally we can read the file
                         string[] lines = File.ReadAllLines(voiceLineTXTFile);
@@ -116,7 +116,7 @@ namespace LT_Nemesis
                             
                             string voiceName = gender + voiceNumber + "_" + subSubFolderName.ToLower() + "_" + i.ToString() ;
 
-                            if (_debug) LTLogger.IMGrey(voiceName + " - " + line);
+                            if (_debug) LTLogger.Debug(voiceName + " - " + line);
 
                             if (!VoiceLines.ContainsKey(voiceName))
                             {
@@ -131,7 +131,7 @@ namespace LT_Nemesis
                 }
             }
 
-            if (_debug) LTLogger.IMTAGreen("NemesisTextManager initialized. Assembly Folder: " + soundsFolder);
+            if (_debug) LTLogger.Debug("NemesisTextManager initialized. Assembly Folder: " + soundsFolder);
         }
 
         public string GetVoiceLineTextByVoiceName(string key)

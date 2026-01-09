@@ -1,7 +1,9 @@
-﻿using TaleWorlds.Core;
-using TaleWorlds.MountAndBlade;
+﻿using LT.Logger;
+using TaleWorlds.Core;
+using TaleWorlds.Core.ImageIdentifiers;
+using TaleWorlds.Core.ViewModelCollection.ImageIdentifiers;
 using TaleWorlds.Library;
-using LT.Logger;
+using TaleWorlds.MountAndBlade;
 
 namespace LT_Nemesis
 {
@@ -37,8 +39,8 @@ namespace LT_Nemesis
 
         //private bool _isBehind;
 
-        private ImageIdentifierVM _imageIdentifier;
-        private ImageIdentifierVM _banner;
+        private CharacterImageIdentifierVM _imageIdentifier;
+        //private ImageIdentifierVM _banner;
 
         public NemesisMissionVM(Mission mission)
         {
@@ -71,8 +73,8 @@ namespace LT_Nemesis
 
             //_screenPosition = new Vec2(1000f, 500f);
 
-            _imageIdentifier = new ImageIdentifierVM();
-            _banner = new ImageIdentifierVM();
+            _imageIdentifier = null; // new CharacterImageIdentifierVM(null);
+            //_banner = new ImageIdentifierVM();
         }
 
 
@@ -292,29 +294,30 @@ namespace LT_Nemesis
             }
         }
 
-        [DataSourceProperty]
-        public ImageIdentifierVM Banner
-        {
-            get => _banner;
-            set
-            {
-                if (value != _banner)
-                {
-                    _banner = value;
-                    OnPropertyChangedWithValue<ImageIdentifierVM>(value, "Banner");
-                }
-            }
-        }
+        //[DataSourceProperty]
+        //public ImageIdentifierVM Banner
+        //{
+        //    get => _banner;
+        //    set
+        //    {
+        //        if (value != _banner)
+        //        {
+        //            _banner = value;
+        //            OnPropertyChangedWithValue<ImageIdentifierVM>(value, "Banner");
+        //        }
+        //    }
+        //}
 
 
         [DataSourceProperty]
-        public ImageIdentifierVM ImageIdentifier
+        public CharacterImageIdentifierVM ImageIdentifier
         {
             get => _imageIdentifier;
             set
             {
                 _imageIdentifier = value;
-                OnPropertyChanged("ImageIdentifier");
+                //OnPropertyChanged("ImageIdentifier");
+                base.OnPropertyChangedWithValue<CharacterImageIdentifierVM>(value, "ImageIdentifier");
             }
         }
 
